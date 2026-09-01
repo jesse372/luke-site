@@ -70,8 +70,8 @@ section{padding:clamp(64px,10vw,130px) 0; position:relative}
 h2{font-family:var(--serif); font-weight:900; font-size:clamp(34px,6vw,64px); line-height:1.02; margin:0 0 18px; letter-spacing:-.02em}
 .lede{font-size:clamp(16px,2vw,19px); line-height:1.65; color:#e8d7ec; max-width:62ch; margin:0 0 30px}
 .card{
-  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.14); border-radius:var(--r);
+  background:linear-gradient(160deg,rgba(58,24,88,.88),rgba(22,8,38,.82));
+  border:1px solid rgba(255,255,255,.18); border-radius:var(--r);
   backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
   padding:26px; position:relative; overflow:hidden;
 }
@@ -79,6 +79,11 @@ h2{font-family:var(--serif); font-weight:900; font-size:clamp(34px,6vw,64px); li
 .grid{display:grid; gap:20px}
 
 /* ============ HERO ============ */
+header.hero>div{position:relative}
+header.hero>div::before{content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:150%; height:135%; z-index:-1; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(18,6,31,.82) 0%, rgba(18,6,31,.55) 42%, transparent 72%)}
+.subname,.tag{text-shadow:0 2px 18px rgba(10,2,18,.95), 0 0 40px rgba(10,2,18,.8)}
 header.hero{min-height:100svh; display:grid; place-items:center; text-align:center; padding:90px 22px 60px; position:relative}
 .crown{font-size:clamp(52px,10vw,90px); line-height:1; animation:bob 3.4s ease-in-out infinite; filter:drop-shadow(0 8px 30px rgba(255,209,102,.55))}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-16px) rotate(4deg)}}
@@ -124,15 +129,15 @@ header.hero{min-height:100svh; display:grid; place-items:center; text-align:cent
 /* ============ GALLERY ============ */
 .gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:18px}
 .shot{position:relative; aspect-ratio:3/4; border-radius:var(--r); overflow:hidden; border:1px solid rgba(255,255,255,.16);
-  transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; background:linear-gradient(150deg,#2a0f3f,#4a1350)}
-.shot:nth-child(odd){transform:rotate(-1.4deg)} .shot:nth-child(even){transform:rotate(1.4deg)}
-.shot:hover{transform:rotate(0) scale(1.045); box-shadow:0 24px 70px rgba(255,46,147,.42); z-index:2}
-.shot img{width:100%; height:100%; object-fit:cover; object-position:50% 28%; display:block}
+  background:linear-gradient(150deg,#2a0f3f,#4a1350)}
+.shot:nth-child(odd){--rz:-1.4deg} .shot:nth-child(even){--rz:1.4deg}
+.shot:hover{--rz:0deg; --tz:70px; box-shadow:0 34px 90px rgba(255,46,147,.5); z-index:2}
+.shot img{position:absolute; inset:0; z-index:1; width:100%; height:100%; object-fit:cover; object-position:50% 28%; display:block}
 .shot .ph{position:absolute; inset:0; display:grid; place-content:center; gap:10px; text-align:center; padding:20px;
   background:linear-gradient(150deg,rgba(255,46,147,.28),rgba(55,213,242,.24),rgba(255,209,102,.28))}
 .shot .ph em{font-size:42px; font-style:normal}
 .shot .ph small{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#ffe7f5; opacity:.85; line-height:1.7}
-.shot figcaption{position:absolute; left:0; right:0; bottom:0; padding:34px 16px 14px; font-size:13px; font-weight:700;
+.shot figcaption{z-index:2; position:absolute; left:0; right:0; bottom:0; padding:34px 16px 14px; font-size:13px; font-weight:700;
   background:linear-gradient(transparent,rgba(10,2,18,.88)); color:#fff}
 
 /* ============ SPEC BARS ============ */
@@ -180,19 +185,61 @@ footer .flag{font-size:26px; letter-spacing:4px; display:block; margin-bottom:12
   *,*::before,*::after{animation:none!important; transition:none!important}
   .reveal{opacity:1; transform:none}
 }
+
+/* ============ 3D LAYER ============ */
+#bg3d{position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.82}
+
+.crown-wrap{position:relative; display:inline-block; transform-style:preserve-3d}
+.ring3d{position:absolute; left:50%; top:50%; width:0; height:0; transform-style:preserve-3d;
+  animation:ringspin 16s linear infinite; pointer-events:none; z-index:-1}
+.ring3d b{position:absolute; left:0; top:0; width:1.1em; margin-left:-.55em; margin-top:-.6em;
+  font-family:var(--serif); font-weight:900; font-size:15px; text-align:center;
+  white-space:pre; text-shadow:0 0 16px currentColor, 0 2px 6px rgba(0,0,0,.6)}
+@keyframes ringspin{from{transform:rotateX(14deg) rotateY(0)}to{transform:rotateX(14deg) rotateY(360deg)}}
+
+.name-wrap{perspective:1000px; transform-style:preserve-3d}
+.name{transform:rotateX(var(--nx,0deg)) rotateY(var(--ny,0deg)); transition:transform .25s cubic-bezier(.2,.8,.2,1);
+  filter:drop-shadow(0 14px 28px rgba(255,46,147,.45))}
+
+/* photos: real 3D tilt */
+.gallery{perspective:1500px}
+.shot{--rx:0deg; --ry:0deg; --rz:0deg; --tz:0px; transform-style:preserve-3d;
+  transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)) translateZ(var(--tz));
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .35s}
+.shot::after{content:""; z-index:3; position:absolute; inset:0; border-radius:var(--r); pointer-events:none;
+  background:linear-gradient(var(--sheen,105deg),rgba(255,255,255,.28),transparent 42%,transparent 60%,rgba(255,46,147,.22));
+  opacity:0; transition:opacity .3s}
+.shot:hover::after{opacity:1}
+
+/* cards get depth too */
+.stats,.flags,.quotes{perspective:1300px}
+.stats .card,.flags .card,.quotes .card{transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; transform-style:preserve-3d}
+.stats .card:hover,.flags .card:hover,.quotes .card:hover{
+  transform:translateZ(46px) rotateX(6deg); box-shadow:0 30px 70px rgba(168,102,255,.4)}
+
+.marquee{transform:perspective(700px) rotateX(9deg); transform-style:preserve-3d}
+
+@media (prefers-reduced-motion:reduce){
+  #bg3d{display:none}
+  .ring3d{animation:none}
+  .name{transform:none}
+}
+
+h2,.lede,summary,details p,.stat small,blockquote{text-shadow:0 2px 14px rgba(10,2,18,.92)}
 </style>
 </head>
 <body>
 
 <div class="aurora" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 <div class="grain" aria-hidden="true"></div>
+<canvas id="bg3d" aria-hidden="true"></canvas>
 
 <!-- ================= HERO ================= -->
 <header class="hero">
   <div>
-    <div class="crown" aria-hidden="true">👑</div>
+    <div class="crown-wrap"><div class="ring3d" id="ring3d" aria-hidden="true"></div><div class="crown" aria-hidden="true">👑</div></div>
     <p class="eyebrow">One man. One page. Zero chill.</p>
-    <h1 class="name">LUKE</h1>
+    <div class="name-wrap"><h1 class="name" id="name3d">LUKE</h1></div>
     <p class="subname">Bachelor &nbsp;•&nbsp; Icon &nbsp;•&nbsp; Menace</p>
     <p class="tag">“He walked in and the room changed key.”</p>
     <div class="status"><i class="pulse"></i> Currently single &amp; taking applications</div>
@@ -378,11 +425,10 @@ CAPTIONS.forEach((cap,i)=>{
   const n=i+1;
   const fig=document.createElement('figure'); fig.className='shot';
   fig.innerHTML=`<div class="ph"><em>💅</em><small>drop <b>luke-${n}.jpg</b><br>into /photos</small></div>
+                 <img alt="${cap}" loading="lazy" src="photos/luke-${n}.jpg">
                  <figcaption>${cap}</figcaption>`;
-  const img=new Image();
-  img.alt=cap; img.loading='lazy';
-  img.onload=()=>{ fig.querySelector('.ph').remove(); fig.prepend(img); };
-  img.src=`photos/luke-${n}.jpg`;
+  // if the photo is missing, drop the broken img so the placeholder shows through
+  fig.querySelector('img').addEventListener('error', e=>e.target.remove());
   gal.appendChild(fig);
 });
 
@@ -438,5 +484,234 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   alert("Link not set yet — open index.html and swap the href for Luke's real email or Instagram. 💅");
 }));
 </script>
+
+<script src="vendor/three.min.js"></script>
+<script>
+/* ================= 3D: mirrorball, hearts, pride knots, glitter, ribbon ================= */
+(function(){
+  const REDUCE = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const cv = document.getElementById('bg3d');
+  if(!window.THREE || !cv || REDUCE) return;
+
+  const PRIDE = [0xff2e93,0xff8a3d,0xffd166,0x3ddc97,0x37d5f2,0xa566ff];
+  let renderer;
+  try{
+    renderer = new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:true, powerPreference:'high-performance'});
+  }catch(e){ return; }                       // no WebGL -> page still fine
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, .1, 200);
+  camera.position.z = 16;
+  const world = new THREE.Group(); scene.add(world);
+
+  // procedural rainbow environment: without this, metals render black
+  (function(){
+    const c=document.createElement('canvas'); c.width=1024; c.height=512;
+    const x=c.getContext('2d');
+    const g=x.createLinearGradient(0,0,1024,0);
+    PRIDE.forEach((col,i)=>g.addColorStop(i/(PRIDE.length-1),'#'+col.toString(16).padStart(6,'0')));
+    x.fillStyle=g; x.fillRect(0,0,1024,512);
+    const v=x.createLinearGradient(0,0,0,512);
+    v.addColorStop(0,'rgba(255,255,255,.95)'); v.addColorStop(.45,'rgba(255,255,255,0)');
+    v.addColorStop(.58,'rgba(0,0,0,0)');       v.addColorStop(1,'rgba(12,3,22,.92)');
+    x.fillStyle=v; x.fillRect(0,0,1024,512);
+    for(let i=0;i<80;i++){                       // disco specks -> glints
+      x.fillStyle='rgba(255,255,255,'+(.45+Math.random()*.55)+')';
+      x.beginPath(); x.arc(Math.random()*1024,Math.random()*512,Math.random()*9+2,0,7); x.fill();
+    }
+    const t=new THREE.CanvasTexture(c);
+    t.mapping=THREE.EquirectangularReflectionMapping;
+    t.colorSpace=THREE.SRGBColorSpace;
+    scene.environment=t;
+  })();
+
+  scene.add(new THREE.AmbientLight(0xffffff,.5));
+  const lights = PRIDE.map((c)=>{ const l = new THREE.PointLight(c, 70, 70); scene.add(l); return l; });
+
+  /* ---- mirrorball ---- */
+  const ball = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(2.7,3),
+    new THREE.MeshStandardMaterial({color:0xffffff, metalness:1, roughness:.09, flatShading:true, envMapIntensity:1.6})
+  );
+  ball.position.set(6.5,3.2,-6); world.add(ball);
+
+  /* ---- hearts ---- */
+  const hs = new THREE.Shape();
+  hs.moveTo(25,25); hs.bezierCurveTo(25,25,20,0,0,0);
+  hs.bezierCurveTo(-30,0,-30,35,-30,35);
+  hs.bezierCurveTo(-30,55,-10,77,25,95);
+  hs.bezierCurveTo(60,77,80,55,80,35);
+  hs.bezierCurveTo(80,35,80,0,50,0);
+  hs.bezierCurveTo(35,0,25,25,25,25);
+  const heartGeo = new THREE.ExtrudeGeometry(hs,{depth:14,bevelEnabled:true,bevelSize:5,bevelThickness:4,bevelSegments:3,curveSegments:16});
+  heartGeo.center(); heartGeo.scale(.019,.019,.019); heartGeo.rotateZ(Math.PI);  // rotate, don't mirror
+
+  /* ---- floaters: hearts + pride torus knots ---- */
+  const knotGeo = new THREE.TorusKnotGeometry(.55,.2,110,16);
+  const floaters = [];
+  for(let i=0;i<18;i++){
+    const col = PRIDE[i % PRIDE.length];
+    const mat = new THREE.MeshPhysicalMaterial({
+      color:col, metalness:.35, roughness:.18,
+      clearcoat:1, clearcoatRoughness:.12,
+      iridescence:1, iridescenceIOR:1.9, transmission:0, emissive:col, emissiveIntensity:.16
+    });
+    const m = new THREE.Mesh(i%2 ? heartGeo : knotGeo, mat);
+    // bias away from the centre so text stays legible
+    const side = Math.random()<.5 ? -1 : 1;
+    m.position.set(side*(7+Math.random()*10), (Math.random()-.5)*22, -6-Math.random()*16);
+    m.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6);
+    m.userData = {
+      sp:.25+Math.random()*.5,                         // bob speed
+      rx:(Math.random()-.5)*.5, ry:(Math.random()-.5)*.5,
+      ph:Math.random()*6.28, base:m.position.y, sc:.55+Math.random()*.75
+    };
+    m.scale.setScalar(m.userData.sc);
+    world.add(m); floaters.push(m);
+  }
+
+  /* ---- glitter field ---- */
+  const N=900, pos=new Float32Array(N*3), col=new Float32Array(N*3), c=new THREE.Color();
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*60; pos[i*3+1]=(Math.random()-.5)*40; pos[i*3+2]=(Math.random()-.5)*40;
+    c.setHex(PRIDE[i%PRIDE.length]); col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+  }
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  pg.setAttribute('color',    new THREE.BufferAttribute(col,3));
+  const glitter = new THREE.Points(pg, new THREE.PointsMaterial({
+    size:.16, vertexColors:true, transparent:true, opacity:.9,
+    blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true
+  }));
+  world.add(glitter);
+
+  /* ---- rainbow ribbon ---- */
+  const RW=34, RH=5, SEGX=90, SEGY=12;
+  const rg = new THREE.PlaneGeometry(RW,RH,SEGX,SEGY);
+  const rc = new Float32Array(rg.attributes.position.count*3);
+  for(let i=0;i<rg.attributes.position.count;i++){
+    const y = rg.attributes.position.getY(i);
+    const band = Math.min(5, Math.floor((y+RH/2)/RH*6));
+    c.setHex(PRIDE[5-band]);
+    rc[i*3]=c.r; rc[i*3+1]=c.g; rc[i*3+2]=c.b;
+  }
+  rg.setAttribute('color', new THREE.BufferAttribute(rc,3));
+  const ribbon = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({
+    vertexColors:true, side:THREE.DoubleSide, metalness:.25, roughness:.28,
+    transparent:true, opacity:.72
+  }));
+  ribbon.position.set(0,-10.5,-20); ribbon.rotation.z=-.14; world.add(ribbon);
+  const rBase = rg.attributes.position.array.slice();
+
+  /* ---- interaction ---- */
+  let mx=0,my=0,tmx=0,tmy=0;
+  addEventListener('pointermove', e=>{ tmx=(e.clientX/innerWidth-.5); tmy=(e.clientY/innerHeight-.5); }, {passive:true});
+  let scrollY=0;
+  addEventListener('scroll', ()=>{
+    scrollY=window.scrollY;
+    const f=Math.min(1, scrollY/innerHeight);          // fade out past the hero
+    cv.style.opacity = (0.82 - f*0.5).toFixed(3);
+  }, {passive:true});
+
+  function resize(){
+    const w=innerWidth,hh=innerHeight;
+    camera.aspect=w/hh; camera.updateProjectionMatrix(); renderer.setSize(w,hh,false);
+  }
+  addEventListener('resize', resize); resize();
+
+  const clock = new THREE.Clock();
+  let running = true;
+  document.addEventListener('visibilitychange', ()=>{ running = !document.hidden; if(running) loop(); });
+
+  function loop(){
+    if(!running) return;
+    requestAnimationFrame(loop);
+    const t = clock.getElapsedTime();
+
+    mx += (tmx-mx)*.05; my += (tmy-my)*.05;
+    camera.position.x = mx*4; camera.position.y = -my*3; camera.lookAt(0,0,0);
+
+    ball.rotation.y = t*.42; ball.rotation.x = Math.sin(t*.25)*.22;
+
+    lights.forEach((l,i)=>{
+      const a = t*.55 + i*(Math.PI*2/lights.length);
+      l.position.set(Math.cos(a)*13, Math.sin(a*1.25)*9, Math.sin(a)*11 + 3);
+    });
+
+    floaters.forEach(m=>{
+      const d=m.userData;
+      m.rotation.x += d.rx*.01; m.rotation.y += d.ry*.01;
+      m.position.y = d.base + Math.sin(t*d.sp + d.ph)*1.5;
+      const p = 1 + Math.sin(t*d.sp*1.7 + d.ph)*.09;      // heartbeat pulse
+      m.scale.setScalar(d.sc*p);
+    });
+
+    glitter.rotation.y = t*.045;
+    glitter.rotation.x = Math.sin(t*.12)*.09;
+
+    const rp = rg.attributes.position.array;
+    for(let i=0;i<rp.length;i+=3){
+      const x=rBase[i], y=rBase[i+1];
+      rp[i+2] = Math.sin(x*.42 + t*1.5)*1.15 + Math.cos(y*.85 + t*.9)*.45;
+    }
+    rg.attributes.position.needsUpdate = true;
+    rg.computeVertexNormals();
+
+    world.rotation.y = mx*.28 + scrollY*.00042;
+    world.rotation.x = -my*.18;
+
+    renderer.render(scene,camera);
+  }
+  loop();
+})();
+
+/* ================= CSS 3D: name tilt, spinning pride ring, per-photo tilt ================= */
+(function(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+
+  /* spinning ring of words around the crown */
+  const ring=document.getElementById('ring3d');
+  if(ring){
+    const WORDS='✦ FABULOUS ✦ SINGLE ✦ ICONIC ✦ AVAILABLE '.split('');
+    const R=165, COLS=['#ff2e93','#ff8a3d','#ffd166','#3ddc97','#37d5f2','#a566ff'];
+    WORDS.forEach((ch,i)=>{
+      const b=document.createElement('b');
+      b.textContent=ch;
+      b.style.color=COLS[i%COLS.length];
+      b.style.transform=`rotateY(${i*(360/WORDS.length)}deg) translateZ(${R}px)`;
+      ring.appendChild(b);
+    });
+  }
+
+  /* hero name follows the pointer in 3D */
+  const name=document.getElementById('name3d');
+  if(name){
+    addEventListener('pointermove', e=>{
+      const nx=(e.clientY/innerHeight-.5)*-16, ny=(e.clientX/innerWidth-.5)*22;
+      name.style.setProperty('--nx',nx.toFixed(2)+'deg');
+      name.style.setProperty('--ny',ny.toFixed(2)+'deg');
+    },{passive:true});
+  }
+
+  /* photos tilt toward the cursor + sheen follows it */
+  document.addEventListener('pointermove', e=>{
+    const el=e.target.closest && e.target.closest('.shot');
+    if(!el) return;
+    const r=el.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+    el.style.setProperty('--ry',(px*22).toFixed(2)+'deg');
+    el.style.setProperty('--rx',(-py*20).toFixed(2)+'deg');
+    el.style.setProperty('--sheen',(Math.atan2(py,px)*57.3+90).toFixed(0)+'deg');
+  },{passive:true});
+  document.addEventListener('pointerout', e=>{
+    const el=e.target.closest && e.target.closest('.shot');
+    if(el){ el.style.setProperty('--ry','0deg'); el.style.setProperty('--rx','0deg'); }
+  },{passive:true});
+})();
+</script>
+
 </body>
 </html>

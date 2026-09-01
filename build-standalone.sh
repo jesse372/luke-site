@@ -18,7 +18,16 @@ for i in range(1, 7):
     data[i] = 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode()
 js = 'const PHOTO_DATA={' + ','.join(f'{k}:"{v}"' for k, v in data.items()) + '};\n'
 h = h.replace('const CAPTIONS', js + 'const CAPTIONS', 1)
-h = h.replace('img.src=`photos/luke-${n}.jpg`;', 'if(PHOTO_DATA[n]) img.src=PHOTO_DATA[n];')
+tag_src = 'src="photos/luke-${n}.jpg"'
+assert tag_src in h, 'gallery img src pattern not found'
+h = h.replace(tag_src, 'src="${PHOTO_DATA[n]||\'\'}"')
+
+# inline three.js so the single file keeps its 3D with no network
+three = open('vendor/three.min.js').read()
+tag = '<script src="vendor/three.min.js"></script>'
+assert tag in h, 'three.js script tag not found'
+h = h.replace(tag, '<script>' + three + '</script>', 1)
+
 open('luke-standalone.html', 'w').write(h)
 print(f'embedded {len(data)} photos')
 PY
