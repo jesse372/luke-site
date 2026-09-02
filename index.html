@@ -549,6 +549,65 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   const heartGeo = new THREE.ExtrudeGeometry(hs,{depth:14,bevelEnabled:true,bevelSize:5,bevelThickness:4,bevelSegments:3,curveSegments:16});
   heartGeo.center(); heartGeo.scale(.019,.019,.019); heartGeo.rotateZ(Math.PI);  // rotate, don't mirror
 
+  /* ---- leather / chrome / gold ---- */
+  const leather = ()=> new THREE.MeshPhysicalMaterial({color:0x15121b, metalness:.16, roughness:.33, clearcoat:1, clearcoatRoughness:.06});
+  const chrome  = ()=> new THREE.MeshStandardMaterial({color:0xffffff, metalness:1, roughness:.11, envMapIntensity:1.5});
+  const gold    = ()=> new THREE.MeshStandardMaterial({color:0xffd166, metalness:1, roughness:.17, envMapIntensity:1.5});
+
+  function makeCuffs(){
+    const g=new THREE.Group();
+    const ring=new THREE.TorusGeometry(.6,.1,14,40);
+    const a=new THREE.Mesh(ring,chrome()); a.position.x=-.78; a.rotation.y=.35;
+    const b=new THREE.Mesh(ring,chrome()); b.position.x= .78; b.rotation.y=-.35;
+    g.add(a,b);
+    const link=new THREE.TorusGeometry(.13,.045,10,22);
+    for(let i=0;i<3;i++){
+      const l=new THREE.Mesh(link,chrome());
+      l.position.x=-.26+i*.26; l.rotation.y=i%2?Math.PI/2:0;
+      g.add(l);
+    }
+    return g;
+  }
+  function makeChain(){
+    const g=new THREE.Group();
+    const link=new THREE.TorusGeometry(.22,.072,12,26);
+    for(let i=0;i<7;i++){
+      const l=new THREE.Mesh(link, i%2?chrome():gold());
+      l.position.y=i*.34-1.02; l.rotation.y=i%2?Math.PI/2:0;
+      g.add(l);
+    }
+    return g;
+  }
+  function makePadlock(){
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(.88,.74,.32),gold()));
+    const sh=new THREE.Mesh(new THREE.TorusGeometry(.29,.072,12,26,Math.PI),chrome());
+    sh.position.y=.54; g.add(sh);
+    return g;
+  }
+  function makeCollar(){
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(.78,.13,16,44),leather()));
+    for(let i=0;i<12;i++){                       // studs, pointing outward
+      const s=new THREE.Mesh(new THREE.ConeGeometry(.075,.17,8),chrome());
+      const a=i/12*Math.PI*2;
+      s.position.set(Math.cos(a)*.78, Math.sin(a)*.78, 0);
+      s.rotation.z=a-Math.PI/2;
+      g.add(s);
+    }
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.2,.05,10,22),chrome());
+    ring.position.y=-.95; g.add(ring);
+    return g;
+  }
+  function makeCrop(){
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,2.1,12),leather()));
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(.32,.4,.05),leather()); tip.position.y=1.2;
+    const grip=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.5,12),leather()); grip.position.y=-.98;
+    g.add(tip,grip);
+    return g;
+  }
+
   /* ---- floaters: hearts + pride torus knots ---- */
   const knotGeo = new THREE.TorusKnotGeometry(.55,.2,110,16);
   const floaters = [];
@@ -573,6 +632,19 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     world.add(m); floaters.push(m);
   }
 
+  /* ---- bondage hardware, same drift as everything else ---- */
+  const KINK=[makeCuffs,makeChain,makePadlock,makeCollar,makeCrop];
+  for(let i=0;i<17;i++){
+    const o=KINK[i%KINK.length]();
+    const side = i%2 ? 1 : -1;
+    o.position.set(side*(7.5+Math.random()*9.5), (Math.random()-.5)*22, -6-Math.random()*15);
+    o.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
+    o.userData={ sp:.22+Math.random()*.42, rx:(Math.random()-.5)*.55, ry:(Math.random()-.5)*.55,
+                 ph:Math.random()*6.28, base:o.position.y, sc:.85+Math.random()*.7 };
+    o.scale.setScalar(o.userData.sc);
+    world.add(o); floaters.push(o);
+  }
+
   /* ---- glitter field ---- */
   const N=900, pos=new Float32Array(N*3), col=new Float32Array(N*3), c=new THREE.Color();
   for(let i=0;i<N;i++){
@@ -588,23 +660,30 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   }));
   world.add(glitter);
 
-  /* ---- rainbow ribbon ---- */
-  const RW=34, RH=5, SEGX=90, SEGY=12;
-  const rg = new THREE.PlaneGeometry(RW,RH,SEGX,SEGY);
-  const rc = new Float32Array(rg.attributes.position.count*3);
-  for(let i=0;i<rg.attributes.position.count;i++){
-    const y = rg.attributes.position.getY(i);
-    const band = Math.min(5, Math.floor((y+RH/2)/RH*6));
-    c.setHex(PRIDE[5-band]);
-    rc[i*3]=c.r; rc[i*3+1]=c.g; rc[i*3+2]=c.b;
+  /* ---- flag ribbons: rainbow pride + leather pride ---- */
+  const LEATHER=[0x0a0a0c,0x1f4ea1,0x0a0a0c,0xffffff,0x1f4ea1,0x0a0a0c];
+  const ribbons=[];
+  function makeRibbon(cols, w, hgt, pos, rotZ, opts){
+    const g=new THREE.PlaneGeometry(w,hgt,90,12);
+    const arr=new Float32Array(g.attributes.position.count*3);
+    for(let i=0;i<g.attributes.position.count;i++){
+      const y=g.attributes.position.getY(i);
+      const band=Math.min(5,Math.floor((y+hgt/2)/hgt*6));
+      c.setHex(cols[5-band]);
+      arr[i*3]=c.r; arr[i*3+1]=c.g; arr[i*3+2]=c.b;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(arr,3));
+    const m=new THREE.Mesh(g, new THREE.MeshStandardMaterial(Object.assign({
+      vertexColors:true, side:THREE.DoubleSide, metalness:.25, roughness:.28,
+      transparent:true, opacity:.72
+    }, opts||{})));
+    m.position.set(pos[0],pos[1],pos[2]); m.rotation.z=rotZ; world.add(m);
+    ribbons.push({geo:g, base:g.attributes.position.array.slice(), ph:Math.random()*6.28});
+    return m;
   }
-  rg.setAttribute('color', new THREE.BufferAttribute(rc,3));
-  const ribbon = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({
-    vertexColors:true, side:THREE.DoubleSide, metalness:.25, roughness:.28,
-    transparent:true, opacity:.72
-  }));
-  ribbon.position.set(0,-10.5,-20); ribbon.rotation.z=-.14; world.add(ribbon);
-  const rBase = rg.attributes.position.array.slice();
+  makeRibbon(PRIDE,   34, 5,   [0,-10.5,-20], -.14);
+  // leather pride flag: latex sheen, sits opposite and higher up
+  makeRibbon(LEATHER, 30, 4.2, [4, 13.5,-30],  .22, {metalness:.55, roughness:.16, opacity:.7});
 
   /* ---- interaction ---- */
   let mx=0,my=0,tmx=0,tmy=0;
@@ -652,13 +731,14 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     glitter.rotation.y = t*.045;
     glitter.rotation.x = Math.sin(t*.12)*.09;
 
-    const rp = rg.attributes.position.array;
-    for(let i=0;i<rp.length;i+=3){
-      const x=rBase[i], y=rBase[i+1];
-      rp[i+2] = Math.sin(x*.42 + t*1.5)*1.15 + Math.cos(y*.85 + t*.9)*.45;
-    }
-    rg.attributes.position.needsUpdate = true;
-    rg.computeVertexNormals();
+    ribbons.forEach(r=>{
+      const rp=r.geo.attributes.position.array, b=r.base;
+      for(let i=0;i<rp.length;i+=3){
+        rp[i+2] = Math.sin(b[i]*.42 + t*1.5 + r.ph)*1.15 + Math.cos(b[i+1]*.85 + t*.9)*.45;
+      }
+      r.geo.attributes.position.needsUpdate = true;
+      r.geo.computeVertexNormals();
+    });
 
     world.rotation.y = mx*.28 + scrollY*.00042;
     world.rotation.x = -my*.18;
