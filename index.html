@@ -37,10 +37,10 @@
 }
 
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth; overflow-x:clip; max-width:100%}
 body{
   margin:0; background:var(--ink); color:var(--cream); font-family:var(--sans);
-  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  overflow-x:clip; -webkit-font-smoothing:antialiased;
 }
 
 /* ============ LIVING BACKGROUND ============ */
@@ -113,7 +113,14 @@ header.hero{min-height:100svh; display:grid; place-items:center; text-align:cent
 .btn:hover{transform:translateY(-3px) scale(1.035); box-shadow:0 18px 54px rgba(255,46,147,.6)}
 .btn.ghost{background:transparent; color:var(--cream); border:1.5px solid rgba(255,255,255,.4); box-shadow:none; animation:none}
 .btn.ghost:hover{border-color:var(--gold); color:var(--gold)}
-.scroll-hint{position:absolute; bottom:26px; left:50%; transform:translateX(-50%); font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#c9a9d6; animation:bob 2.6s ease-in-out infinite}
+.scroll-hint{position:absolute; bottom:26px; left:0; right:0; text-align:center; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#c9a9d6; animation:bob 2.6s ease-in-out infinite}
+
+@media (max-width:520px){
+  header.hero{padding:74px 16px 56px}
+  .wrap{padding:0 16px}
+  .name{letter-spacing:-.02em}
+  .subname{letter-spacing:.18em}
+}
 
 /* ============ MARQUEE ============ */
 .marquee{overflow:hidden; padding:16px 0; background:var(--rainbow); background-size:300% 100%; animation:slide 9s linear infinite; border-block:2px solid rgba(0,0,0,.18)}
@@ -508,6 +515,16 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   camera.position.z = 16;
   const world = new THREE.Group(); scene.add(world);
 
+  // On a narrow screen the frustum is tight, so objects sit far away and read as
+  // specks. Bring them closer and scale them up so the gear is actually legible.
+  const NARROW = innerWidth < 700;
+  const ZNEAR  = NARROW ? -5   : -6;    // nearest depth
+  const ZSPAN  = NARROW ? 13   : 16;    // depth spread
+  const UPSC   = NARROW ? 1.18 : 1;     // extra scale on phones
+  // on phones hug the edges harder so the hero copy stays readable
+  const FXMIN  = NARROW ? .64  : .50, FXVAR = NARROW ? .34 : .48;
+  const BASEOP = NARROW ? .72  : .82;   // canvas opacity
+
   // procedural rainbow environment: without this, metals render black
   (function(){
     const c=document.createElement('canvas'); c.width=1024; c.height=512;
@@ -747,13 +764,13 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     const m = new THREE.Mesh(i%2 ? heartGeo : knotGeo, mat);
     // bias away from the centre so text stays legible
     const side = Math.random()<.5 ? -1 : 1;
-    m.position.set(0, (Math.random()-.5)*22, -6-Math.random()*16);
+    m.position.set(0, (Math.random()-.5)*22, ZNEAR-Math.random()*ZSPAN);
     m.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6);
     m.userData = {
       sp:.25+Math.random()*.5,                         // bob speed
       rx:(Math.random()-.5)*.5, ry:(Math.random()-.5)*.5,
-      ph:Math.random()*6.28, base:m.position.y, sc:.55+Math.random()*.75,
-      fx:side*(.50+Math.random()*.48)          // fraction of half-width, set in layoutFloaters()
+      ph:Math.random()*6.28, base:m.position.y, sc:(.55+Math.random()*.75)*UPSC,
+      fx:side*(FXMIN+Math.random()*FXVAR)      // fraction of half-width, set in layoutFloaters()
     };
     m.scale.setScalar(m.userData.sc);
     world.add(m); floaters.push(m);
@@ -769,11 +786,11 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   for(let i=0;i<KINK_N;i++){
     const o = i<PROTO.length ? PROTO[i] : PROTO[i%PROTO.length].clone();
     const side = i%2 ? 1 : -1;
-    o.position.set(0, (Math.random()-.5)*22, -6-Math.random()*15);
+    o.position.set(0, (Math.random()-.5)*22, ZNEAR-Math.random()*(ZSPAN-1));
     o.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
     o.userData={ sp:.22+Math.random()*.42, rx:(Math.random()-.5)*.55, ry:(Math.random()-.5)*.55,
-                 ph:Math.random()*6.28, base:o.position.y, sc:.85+Math.random()*.7,
-                 fx:side*(.46+Math.random()*.50) };
+                 ph:Math.random()*6.28, base:o.position.y, sc:(.85+Math.random()*.7)*UPSC,
+                 fx:side*(FXMIN-.04+Math.random()*FXVAR) };
     o.scale.setScalar(o.userData.sc);
     world.add(o); floaters.push(o);
   }
@@ -825,7 +842,7 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   addEventListener('scroll', ()=>{
     scrollY=window.scrollY;
     const f=Math.min(1, scrollY/innerHeight);          // fade out past the hero
-    cv.style.opacity = (0.82 - f*0.5).toFixed(3);
+    cv.style.opacity = (BASEOP - f*0.5).toFixed(3);
   }, {passive:true});
 
   /* Keep every floater inside the frustum on ANY aspect ratio. Positions used to be
@@ -846,6 +863,7 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     camera.aspect=w/hh; camera.updateProjectionMatrix(); renderer.setSize(w,hh,false);
     layoutFloaters();
   }
+  cv.style.opacity = BASEOP;
   addEventListener('resize', resize); resize();
 
   const clock = new THREE.Clock();
@@ -903,7 +921,7 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   const ring=document.getElementById('ring3d');
   if(ring){
     const WORDS='✦ FABULOUS ✦ SINGLE ✦ ICONIC ✦ AVAILABLE '.split('');
-    const R=165, COLS=['#ff2e93','#ff8a3d','#ffd166','#3ddc97','#37d5f2','#a566ff'];
+    const R=Math.round(Math.min(165, innerWidth*0.30)), COLS=['#ff2e93','#ff8a3d','#ffd166','#3ddc97','#37d5f2','#a566ff'];
     WORDS.forEach((ch,i)=>{
       const b=document.createElement('b');
       b.textContent=ch;
