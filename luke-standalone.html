@@ -617,6 +617,131 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     return g;
   }
 
+  /* ---- more gear: latex / rubber / gemstone finishes ---- */
+  const latex  = (c)=> new THREE.MeshPhysicalMaterial({color:c, metalness:.06, roughness:.22, clearcoat:1, clearcoatRoughness:.05, sheen:.8, envMapIntensity:1.2});
+  const rubber = (c)=> new THREE.MeshPhysicalMaterial({color:c, metalness:.02, roughness:.4,  clearcoat:.55});
+  const gem    = (c)=> new THREE.MeshPhysicalMaterial({color:c, metalness:.15, roughness:.03, clearcoat:1, envMapIntensity:2.4, emissive:c, emissiveIntensity:.22});
+  const glass  = (c)=> new THREE.MeshPhysicalMaterial({color:c, metalness:.1,  roughness:.22, clearcoat:1});
+  const pick   = ()=> PRIDE[Math.floor(Math.random()*PRIDE.length)];
+
+  function makeMuirCap(){                        // leather cap
+    const g=new THREE.Group();
+    const crown=new THREE.Mesh(new THREE.CylinderGeometry(.5,.63,.42,22),leather()); crown.position.y=.21;
+    const top  =new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.05,22),leather());  top.position.y=.44;
+    const band =new THREE.Mesh(new THREE.TorusGeometry(.645,.05,10,30),chrome());    band.rotation.x=Math.PI/2; band.position.y=.03;
+    const peak =new THREE.Mesh(new THREE.CylinderGeometry(.92,.92,.055,22,1,false,0,Math.PI),leather());
+    peak.position.set(0,-.01,0); peak.scale.z=.6;
+    g.add(crown,top,band,peak);
+    return g;
+  }
+  function makeHarness(){                        // chest harness: O-ring + straps
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(.27,.07,12,24),chrome()));
+    const strap=new THREE.BoxGeometry(.15,1.2,.06), buck=new THREE.BoxGeometry(.19,.14,.1);
+    for(let i=0;i<4;i++){
+      const a=Math.PI/4+i*Math.PI/2;
+      const st=new THREE.Mesh(strap,leather());
+      st.position.set(Math.cos(a)*.66,Math.sin(a)*.66,0); st.rotation.z=a-Math.PI/2; g.add(st);
+      const b=new THREE.Mesh(buck,gold());
+      b.position.set(Math.cos(a)*1.2,Math.sin(a)*1.2,0); b.rotation.z=a; g.add(b);
+    }
+    return g;
+  }
+  function makeFlogger(){
+    const g=new THREE.Group();
+    const h=new THREE.Mesh(new THREE.CylinderGeometry(.085,.1,.72,12),leather()); h.position.y=.62;
+    const pom=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),chrome());       pom.position.y=1.02;
+    const col=new THREE.Mesh(new THREE.TorusGeometry(.11,.035,8,18),gold());      col.rotation.x=Math.PI/2; col.position.y=.26;
+    g.add(h,pom,col);
+    const fall=new THREE.CylinderGeometry(.026,.02,1.2,5);
+    for(let i=0;i<11;i++){
+      const a=i/11*Math.PI*2, r=.05+Math.random()*.05;
+      const fl=new THREE.Mesh(fall,leather());
+      fl.position.set(Math.cos(a)*r,-.36,Math.sin(a)*r);
+      fl.rotation.z=Math.cos(a)*.17; fl.rotation.x=Math.sin(a)*.17;
+      g.add(fl);
+    }
+    return g;
+  }
+  function makePaddle(){
+    const g=new THREE.Group();
+    const blade=new THREE.Mesh(new THREE.CapsuleGeometry(.32,.5,5,16),leather());
+    blade.scale.z=.22; blade.position.y=.62;
+    const hdl=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.66,10),leather()); hdl.position.y=-.3;
+    const wrap=new THREE.Mesh(new THREE.TorusGeometry(.087,.03,8,16),gold()); wrap.rotation.x=Math.PI/2; wrap.position.y=.02;
+    g.add(blade,hdl,wrap);
+    for(let i=0;i<6;i++){
+      const a=i/6*Math.PI*2;
+      const r=new THREE.Mesh(new THREE.SphereGeometry(.042,8,6),chrome());
+      r.position.set(Math.cos(a)*.24,.62+Math.sin(a)*.44,.08); g.add(r);
+    }
+    return g;
+  }
+  function makeBallGag(){
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(.33,18,14),rubber(0xff2e93)));
+    const st=new THREE.Mesh(new THREE.TorusGeometry(.76,.06,10,30,Math.PI*1.5),leather());
+    st.rotation.z=Math.PI*.25; g.add(st);
+    for(const s of [-1,1]){
+      const b=new THREE.Mesh(new THREE.BoxGeometry(.17,.13,.1),gold());
+      b.position.set(s*.66,.36,0); b.rotation.z=s*.5; g.add(b);
+    }
+    return g;
+  }
+  function makePoppers(){                        // little brown bottle
+    const amber=glass(0x7a3f10);
+    const g=new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.54,16),amber));
+    const lab=new THREE.Mesh(new THREE.CylinderGeometry(.242,.242,.27,16),latex(pick())); g.add(lab);
+    const nk =new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,.11,12),amber); nk.position.y=.32; g.add(nk);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.145,.145,.19,14),rubber(0x15121b)); cap.position.y=.45; g.add(cap);
+    return g;
+  }
+  function makeToy(){                            // strap-on
+    const c=pick(), g=new THREE.Group();
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.15,.185,.92,16),latex(c)); shaft.position.y=.5;
+    const tip  =new THREE.Mesh(new THREE.SphereGeometry(.163,16,12),latex(c)); tip.position.y=.97; tip.scale.y=1.2;
+    const base =new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.13,18),latex(c)); base.position.y=-.02;
+    g.add(shaft,tip,base);
+    const strap=new THREE.BoxGeometry(.12,.055,.95);
+    for(const s of [-1,1]){
+      const st=new THREE.Mesh(strap,leather());
+      st.position.set(s*.28,-.02,0); st.rotation.y=s*.55; g.add(st);
+    }
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.4,.05,8,22),chrome());
+    ring.rotation.x=Math.PI/2; ring.position.y=-.02; g.add(ring);
+    return g;
+  }
+  function makePlug(){                           // jewelled, obviously
+    const g=new THREE.Group(), pts=[];
+    for(let i=0;i<=15;i++){
+      const t=i/15;
+      const r = t<.60 ? Math.sin(t*Math.PI/.60)*.30+.05 : .07+(t-.60)/.40*.28;
+      pts.push(new THREE.Vector2(Math.max(.035,r), t*.95));
+    }
+    g.add(new THREE.Mesh(new THREE.LatheGeometry(pts,18),latex(0xa566ff)));
+    const j=new THREE.Mesh(new THREE.IcosahedronGeometry(.17,0),gem(0xff2e93)); j.position.y=1.0; g.add(j);
+    return g;
+  }
+  function makeClamps(){                         // nipple clamps + chain
+    const g=new THREE.Group();
+    const link=new THREE.TorusGeometry(.1,.032,7,14);
+    for(let i=0;i<7;i++){
+      const l=new THREE.Mesh(link,chrome());
+      l.position.set((i-3)*.17, -Math.cos((i-3)/3*1.15)*.2, 0);
+      l.rotation.y=i%2?Math.PI/2:0; g.add(l);
+    }
+    for(const s of [-1,1]){
+      for(const [dz,rz] of [[0,.22],[.07,.44]]){
+        const jaw=new THREE.Mesh(new THREE.BoxGeometry(.07,.32,.045),chrome());
+        jaw.position.set(s*.63,.22,dz); jaw.rotation.z=s*rz; g.add(jaw);
+      }
+      const sc=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.15,8),gold());
+      sc.position.set(s*.63,.42,.035); g.add(sc);
+    }
+    return g;
+  }
+
   /* ---- floaters: hearts + pride torus knots ---- */
   const knotGeo = new THREE.TorusKnotGeometry(.55,.2,110,16);
   const floaters = [];
@@ -643,9 +768,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   }
 
   /* ---- bondage hardware, same drift as everything else ---- */
-  const KINK=[makeCuffs,makeChain,makePadlock,makeCollar,makeCrop];
-  for(let i=0;i<17;i++){
-    const o=KINK[i%KINK.length]();
+  const KINK=[makeCuffs,makeChain,makePadlock,makeCollar,makeCrop,
+              makeMuirCap,makeHarness,makeFlogger,makePaddle,makeBallGag,
+              makePoppers,makeToy,makePlug,makeClamps];
+  // build one of each, then clone: clones share geometry + material (cheap on mobile)
+  const PROTO = KINK.map(f=>f());
+  const KINK_N = innerWidth<700 ? 18 : 28;
+  for(let i=0;i<KINK_N;i++){
+    const o = i<PROTO.length ? PROTO[i] : PROTO[i%PROTO.length].clone();
     const side = i%2 ? 1 : -1;
     o.position.set(0, (Math.random()-.5)*22, -6-Math.random()*15);
     o.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
