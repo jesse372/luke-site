@@ -622,12 +622,13 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     const m = new THREE.Mesh(i%2 ? heartGeo : knotGeo, mat);
     // bias away from the centre so text stays legible
     const side = Math.random()<.5 ? -1 : 1;
-    m.position.set(side*(7+Math.random()*10), (Math.random()-.5)*22, -6-Math.random()*16);
+    m.position.set(0, (Math.random()-.5)*22, -6-Math.random()*16);
     m.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6);
     m.userData = {
       sp:.25+Math.random()*.5,                         // bob speed
       rx:(Math.random()-.5)*.5, ry:(Math.random()-.5)*.5,
-      ph:Math.random()*6.28, base:m.position.y, sc:.55+Math.random()*.75
+      ph:Math.random()*6.28, base:m.position.y, sc:.55+Math.random()*.75,
+      fx:side*(.50+Math.random()*.48)          // fraction of half-width, set in layoutFloaters()
     };
     m.scale.setScalar(m.userData.sc);
     world.add(m); floaters.push(m);
@@ -638,10 +639,11 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
   for(let i=0;i<17;i++){
     const o=KINK[i%KINK.length]();
     const side = i%2 ? 1 : -1;
-    o.position.set(side*(7.5+Math.random()*9.5), (Math.random()-.5)*22, -6-Math.random()*15);
+    o.position.set(0, (Math.random()-.5)*22, -6-Math.random()*15);
     o.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
     o.userData={ sp:.22+Math.random()*.42, rx:(Math.random()-.5)*.55, ry:(Math.random()-.5)*.55,
-                 ph:Math.random()*6.28, base:o.position.y, sc:.85+Math.random()*.7 };
+                 ph:Math.random()*6.28, base:o.position.y, sc:.85+Math.random()*.7,
+                 fx:side*(.46+Math.random()*.50) };
     o.scale.setScalar(o.userData.sc);
     world.add(o); floaters.push(o);
   }
@@ -696,9 +698,23 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     cv.style.opacity = (0.82 - f*0.5).toFixed(3);
   }, {passive:true});
 
+  /* Keep every floater inside the frustum on ANY aspect ratio. Positions used to be
+     hard-coded at |x| 7-17 world units; on a portrait phone only |x| < ~5.3 is visible,
+     so the mirrorball, hearts, knots and all 17 bondage pieces fell off-screen. */
+  function layoutFloaters(){
+    const tan = Math.tan(camera.fov*Math.PI/360);
+    floaters.forEach(o=>{
+      const halfW = (camera.position.z - o.position.z) * tan * camera.aspect;
+      o.position.x = o.userData.fx * halfW;
+    });
+    const bw = (camera.position.z - ball.position.z) * tan * camera.aspect;
+    ball.position.x = Math.min(6.5, bw*.66);
+  }
+
   function resize(){
     const w=innerWidth,hh=innerHeight;
     camera.aspect=w/hh; camera.updateProjectionMatrix(); renderer.setSize(w,hh,false);
+    layoutFloaters();
   }
   addEventListener('resize', resize); resize();
 
