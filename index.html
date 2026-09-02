@@ -751,6 +751,19 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     return g;
   }
 
+  function makePhallus(){
+    const c=pick(), g=new THREE.Group();
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.17,.19,1.0,14),latex(c)); shaft.position.y=.56;
+    const ridge=new THREE.Mesh(new THREE.TorusGeometry(.18,.036,8,18),latex(c));     ridge.rotation.x=Math.PI/2; ridge.position.y=.97;
+    const glans=new THREE.Mesh(new THREE.SphereGeometry(.205,16,12),latex(c));       glans.position.y=1.08; glans.scale.y=1.15;
+    g.add(shaft,ridge,glans);
+    for(const s of [-1,1]){
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.185,12,10),latex(c));
+      b.position.set(s*.15,.07,0); b.scale.set(1,.9,1.05); g.add(b);
+    }
+    return g;
+  }
+
   /* ---- floaters: hearts + pride torus knots ---- */
   const knotGeo = new THREE.TorusKnotGeometry(.55,.2,110,16);
   const floaters = [];
@@ -791,6 +804,22 @@ document.querySelectorAll('[data-placeholder]').forEach(a=>a.addEventListener('c
     o.userData={ sp:.22+Math.random()*.42, rx:(Math.random()-.5)*.55, ry:(Math.random()-.5)*.55,
                  ph:Math.random()*6.28, base:o.position.y, sc:(.85+Math.random()*.7)*UPSC,
                  fx:side*(FXMIN-.04+Math.random()*FXVAR) };
+    o.scale.setScalar(o.userData.sc);
+    world.add(o); floaters.push(o);
+  }
+
+  /* ---- heaps of them, as requested ---- */
+  const DICK_N = NARROW ? 14 : 22;
+  const DICKS  = [];
+  for(let i=0;i<6;i++) DICKS.push(makePhallus());      // six colourways to clone from
+  for(let i=0;i<DICK_N;i++){
+    const o = i<DICKS.length ? DICKS[i] : DICKS[i%DICKS.length].clone();
+    const side = i%2 ? 1 : -1;
+    o.position.set(0, (Math.random()-.5)*22, ZNEAR-Math.random()*(ZSPAN-1));
+    o.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);
+    o.userData={ sp:.24+Math.random()*.44, rx:(Math.random()-.5)*.6, ry:(Math.random()-.5)*.6,
+                 ph:Math.random()*6.28, base:o.position.y, sc:(.8+Math.random()*.6)*UPSC,
+                 fx:side*(FXMIN-.06+Math.random()*FXVAR) };
     o.scale.setScalar(o.userData.sc);
     world.add(o); floaters.push(o);
   }
